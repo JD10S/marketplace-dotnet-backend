@@ -7,23 +7,28 @@ using Marketplace.Data.Repositories;
 
 var builder = WebApplication.CreateBuilder(args);
 
+//
+// 🔹 Services
+//
+
 // Controllers
 builder.Services.AddControllers();
 
-// CORS
+// CORS (para Vercel y pruebas)
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("AllowFrontend",
-        policy =>
-        {
-            policy
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowAnyOrigin(); 
-        });
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
 });
 
-builder.Services.AddControllers();
+// Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
 
 // Database
 builder.Services.AddScoped<DatabaseConnection>();
@@ -40,19 +45,30 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICartRepository, CartRepository>();
 builder.Services.AddScoped<ICartService, CartService>();
 
-
 var app = builder.Build();
 
-// Middlewares
+//
+// 🔹 Middlewares
+//
+
 app.UseCors("AllowFrontend");
-app.UseAuthorization();
+
 app.UseMiddleware<ExceptionMiddleware>();
 
-// Endpoints
+app.UseAuthorization();
+
+// Swagger (habilitado también en producción para portafolio)
+app.UseSwagger();
+app.UseSwaggerUI();
+
+//
+// 🔹 Endpoints
+//
+
 app.MapControllers();
 
+// 🔥 Render usa el puerto por variable de entorno
 var port = Environment.GetEnvironmentVariable("PORT") ?? "8080";
 app.Urls.Add($"http://*:{port}");
-
 
 app.Run();
