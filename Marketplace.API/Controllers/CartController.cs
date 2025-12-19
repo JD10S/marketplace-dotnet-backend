@@ -24,10 +24,10 @@ public class CartController : ControllerBase
          
             return Ok(cartItems ?? new List<CartItem>());
         }
-        catch (Exception ex)
+        catch 
         {
-           
-            return NotFound("Carrito no encontrado o vacío");
+
+            return Ok(new List<CartItem>());
         }
     }
 
