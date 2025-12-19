@@ -6,7 +6,7 @@ namespace Marketplace.Data.Database
 {
     public class DatabaseConnection
     {
-        private readonly string _connectionString;
+        private readonly string _connectionString = string.Empty;
 
         public DatabaseConnection(IConfiguration configuration)
         {

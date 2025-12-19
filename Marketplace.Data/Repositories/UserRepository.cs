@@ -1,12 +1,7 @@
-﻿using Marketplace.Data.Database;
+﻿using Npgsql;
+using Marketplace.Data.Database;
 using Marketplace.Data.Interfaces;
 using Marketplace.Entities.Entities;
-using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Marketplace.Data.Repositories
 {
@@ -22,12 +17,12 @@ namespace Marketplace.Data.Repositories
         public User? GetByEmail(string email)
         {
             using var connection = _db.GetConnection();
-            var command = new SqlCommand(
-                "SELECT * FROM Users WHERE Email = @Email",
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM users WHERE email = @email",
                 connection
             );
 
-            command.Parameters.AddWithValue("@Email", email);
+            command.Parameters.AddWithValue("@email", email);
 
             connection.Open();
             using var reader = command.ExecuteReader();
@@ -36,29 +31,29 @@ namespace Marketplace.Data.Repositories
 
             return new User
             {
-                Id = (int)reader["Id"],
-                FullName = reader["FullName"].ToString()!,
-                Email = reader["Email"].ToString()!,
-                Password = reader["PasswordHash"].ToString()!,
-                CreatedAt = (DateTime)reader["CreatedAt"]
+                Id = reader.GetInt32(reader.GetOrdinal("id")),
+                FullName = reader.GetString(reader.GetOrdinal("full_name")),
+                Email = reader.GetString(reader.GetOrdinal("email")),
+                Password = reader.GetString(reader.GetOrdinal("password_hash")),
+                CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
             };
         }
 
         public void Create(User user)
         {
             using var connection = _db.GetConnection();
-            var command = new SqlCommand(
-                @"INSERT INTO Users (FullName, Email, PasswordHash, CreatedAt)
-                  VALUES (@FullName, @Email, @PasswordHash, @CreatedAt)",
-                connection
-            );
-
-            command.Parameters.AddWithValue("@FullName", user.FullName);
-            command.Parameters.AddWithValue("@Email", user.Email);
-            command.Parameters.AddWithValue("@PasswordHash", user.Password);
-            command.Parameters.AddWithValue("@CreatedAt", user.CreatedAt);
-
             connection.Open();
+
+            using var command = new NpgsqlCommand(@"
+                INSERT INTO users (full_name, email, password_hash, created_at)
+                VALUES (@full_name, @email, @password_hash, @created_at)
+            ", connection);
+
+            command.Parameters.AddWithValue("@full_name", user.FullName);
+            command.Parameters.AddWithValue("@email", user.Email);
+            command.Parameters.AddWithValue("@password_hash", user.Password);
+            command.Parameters.AddWithValue("@created_at", user.CreatedAt);
+
             command.ExecuteNonQuery();
         }
     }
