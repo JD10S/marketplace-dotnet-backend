@@ -1,4 +1,4 @@
-﻿using Microsoft.Data.SqlClient;
+﻿using Npgsql;
 using Marketplace.Data.Database;
 using Marketplace.Data.Interfaces;
 using Marketplace.Entities.Entities;
@@ -19,22 +19,26 @@ namespace Marketplace.Data.Repositories
             var products = new List<Product>();
 
             using var connection = _db.GetConnection();
-            var command = new SqlCommand("SELECT * FROM Products", connection);
-
             connection.Open();
+
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM products ORDER BY id",
+                connection
+            );
+
             using var reader = command.ExecuteReader();
 
             while (reader.Read())
             {
                 products.Add(new Product
                 {
-                    Id = (int)reader["Id"],
-                    Name = reader["Name"].ToString()!,
-                    Description = reader["Description"].ToString()!,
-                    Price = (decimal)reader["Price"],
-                    Stock = (int)reader["Stock"],
-                    ImageUrl = reader["ImageUrl"].ToString()!,
-                    CreatedAt = (DateTime)reader["CreatedAt"]
+                    Id = reader.GetInt32(reader.GetOrdinal("id")),
+                    Name = reader.GetString(reader.GetOrdinal("name")),
+                    Description = reader.GetString(reader.GetOrdinal("description")),
+                    Price = reader.GetDecimal(reader.GetOrdinal("price")),
+                    Stock = reader.GetInt32(reader.GetOrdinal("stock")),
+                    ImageUrl = reader.GetString(reader.GetOrdinal("imageurl")),
+                    CreatedAt = reader.GetDateTime(reader.GetOrdinal("createdat"))
                 });
             }
 
@@ -44,86 +48,91 @@ namespace Marketplace.Data.Repositories
         public Product? GetById(int id)
         {
             using var connection = _db.GetConnection();
-            var command = new SqlCommand(
-                "SELECT * FROM Products WHERE Id = @Id",
+            connection.Open();
+
+            using var command = new NpgsqlCommand(
+                "SELECT * FROM products WHERE id = @id",
                 connection
             );
 
-            command.Parameters.AddWithValue("@Id", id);
+            command.Parameters.AddWithValue("id", id);
 
-            connection.Open();
             using var reader = command.ExecuteReader();
 
             if (!reader.Read()) return null;
 
             return new Product
             {
-                Id = (int)reader["Id"],
-                Name = reader["Name"].ToString()!,
-                Description = reader["Description"].ToString()!,
-                Price = (decimal)reader["Price"],
-                Stock = (int)reader["Stock"],
-                ImageUrl = reader["ImageUrl"].ToString()!,
-                CreatedAt = (DateTime)reader["CreatedAt"]
+                Id = reader.GetInt32(reader.GetOrdinal("id")),
+                Name = reader.GetString(reader.GetOrdinal("name")),
+                Description = reader.GetString(reader.GetOrdinal("description")),
+                Price = reader.GetDecimal(reader.GetOrdinal("price")),
+                Stock = reader.GetInt32(reader.GetOrdinal("stock")),
+                ImageUrl = reader.GetString(reader.GetOrdinal("imageurl")),
+                CreatedAt = reader.GetDateTime(reader.GetOrdinal("createdat"))
             };
         }
 
         public void Create(Product product)
         {
             using var connection = _db.GetConnection();
-            var command = new SqlCommand(
-                @"INSERT INTO Products (Name, Description, Price, Stock, ImageUrl, CreatedAt)
-                  VALUES (@Name, @Description, @Price, @Stock, @ImageUrl, @CreatedAt)",
+            connection.Open();
+
+            using var command = new NpgsqlCommand(
+                @"INSERT INTO products 
+                  (name, description, price, stock, imageurl, createdat)
+                  VALUES (@name, @description, @price, @stock, @imageurl, @createdat)",
                 connection
             );
 
-            command.Parameters.AddWithValue("@Name", product.Name);
-            command.Parameters.AddWithValue("@Description", product.Description);
-            command.Parameters.AddWithValue("@Price", product.Price);
-            command.Parameters.AddWithValue("@Stock", product.Stock);
-            command.Parameters.AddWithValue("@ImageUrl", product.ImageUrl);
-            command.Parameters.AddWithValue("@CreatedAt", product.CreatedAt);
+            command.Parameters.AddWithValue("name", product.Name);
+            command.Parameters.AddWithValue("description", product.Description);
+            command.Parameters.AddWithValue("price", product.Price);
+            command.Parameters.AddWithValue("stock", product.Stock);
+            command.Parameters.AddWithValue("imageurl", product.ImageUrl);
+            command.Parameters.AddWithValue("createdat", product.CreatedAt);
 
-            connection.Open();
             command.ExecuteNonQuery();
         }
 
         public void Update(Product product)
         {
             using var connection = _db.GetConnection();
-            var command = new SqlCommand(
-                @"UPDATE Products SET
-                    Name = @Name,
-                    Description = @Description,
-                    Price = @Price,
-                    Stock = @Stock,
-                    ImageUrl = @ImageUrl
-                  WHERE Id = @Id",
+            connection.Open();
+
+            using var command = new NpgsqlCommand(
+                @"UPDATE products SET
+                    name = @name,
+                    description = @description,
+                    price = @price,
+                    stock = @stock,
+                    imageurl = @imageurl
+                  WHERE id = @id",
                 connection
             );
 
-            command.Parameters.AddWithValue("@Id", product.Id);
-            command.Parameters.AddWithValue("@Name", product.Name);
-            command.Parameters.AddWithValue("@Description", product.Description);
-            command.Parameters.AddWithValue("@Price", product.Price);
-            command.Parameters.AddWithValue("@Stock", product.Stock);
-            command.Parameters.AddWithValue("@ImageUrl", product.ImageUrl);
+            command.Parameters.AddWithValue("id", product.Id);
+            command.Parameters.AddWithValue("name", product.Name);
+            command.Parameters.AddWithValue("description", product.Description);
+            command.Parameters.AddWithValue("price", product.Price);
+            command.Parameters.AddWithValue("stock", product.Stock);
+            command.Parameters.AddWithValue("imageurl", product.ImageUrl);
 
-            connection.Open();
             command.ExecuteNonQuery();
         }
 
         public void Delete(int id)
         {
             using var connection = _db.GetConnection();
-            var command = new SqlCommand(
-                "DELETE FROM Products WHERE Id = @Id",
+            connection.Open();
+
+            using var command = new NpgsqlCommand(
+                "DELETE FROM products WHERE id = @id",
                 connection
             );
 
-            command.Parameters.AddWithValue("@Id", id);
+            command.Parameters.AddWithValue("id", id);
 
-            connection.Open();
             command.ExecuteNonQuery();
         }
     }

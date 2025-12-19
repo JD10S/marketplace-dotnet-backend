@@ -1,22 +1,21 @@
-﻿using Microsoft.Data.SqlClient;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
+using Npgsql;
+using System;
 
 namespace Marketplace.Data.Database
 {
     public class DatabaseConnection
     {
-        private readonly IConfiguration _configuration;
+        private readonly string _connectionString;
 
         public DatabaseConnection(IConfiguration configuration)
         {
-            _configuration = configuration;
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
         }
 
-        public SqlConnection GetConnection()
+        public NpgsqlConnection GetConnection()
         {
-            return new SqlConnection(
-                _configuration.GetConnectionString("DefaultConnection")
-            );
+            return new NpgsqlConnection(_connectionString);
         }
     }
 }
