@@ -13,48 +13,61 @@ public class CartController : ControllerBase
         _cartService = cartService;
     }
 
-    [HttpGet("{userId}")]
+    
+    [HttpGet("{userId:int}")]
     public IActionResult GetCart(int userId)
     {
-        return Ok(_cartService.GetCart(userId));
+        try
+        {
+            var cartItems = _cartService.GetCart(userId);
+
+         
+            return Ok(cartItems ?? new List<CartItem>());
+        }
+        catch (Exception ex)
+        {
+           
+            return NotFound("Carrito no encontrado o vacío");
+        }
     }
 
+   
     [HttpPost]
     public IActionResult Add([FromBody] CartItem item)
     {
+        if (item == null || item.ProductId <= 0 || item.Quantity <= 0)
+            return BadRequest("Datos del ítem inválidos");
+
         _cartService.AddToCart(item);
-        return Ok();
+        return Ok(); 
     }
 
-    [HttpPut("{id}")]
-    public IActionResult UpdateQuantity(int id, [FromQuery] int quantity)
-    {
-        _cartService.UpdateQuantity(id, quantity);
-        return Ok();
-    }
-
-
+  
     [HttpPut]
     public IActionResult Update([FromBody] CartItem item)
     {
+        if (item == null || item.Id <= 0)
+            return BadRequest("Ítem inválido");
+
         _cartService.Update(item);
         return Ok();
     }
 
-
-
-
-
-    [HttpDelete("{id}")]
+    
+    [HttpDelete("{id:int}")]
     public IActionResult Remove(int id)
     {
+        if (id <= 0)
+            return BadRequest("ID inválido");
+
         _cartService.Remove(id);
         return Ok();
     }
 
-    [HttpGet("total/{userId}")]
+    [HttpGet("total/{userId:int}")]
     public IActionResult GetTotal(int userId)
     {
-        return Ok(_cartService.GetTotal(userId));
+        var total = _cartService.GetTotal(userId);
+        return Ok(total);
     }
 }
