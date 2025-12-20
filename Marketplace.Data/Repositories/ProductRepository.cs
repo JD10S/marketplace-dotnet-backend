@@ -22,7 +22,16 @@ namespace Marketplace.Data.Repositories
             connection.Open();
 
             using var command = new NpgsqlCommand(
-                "SELECT * FROM products ORDER BY id",
+                @"SELECT 
+                    id, 
+                    name, 
+                    description, 
+                    price, 
+                    stock, 
+                    image_url, 
+                    created_at 
+                  FROM products 
+                  ORDER BY id",
                 connection
             );
 
@@ -34,11 +43,13 @@ namespace Marketplace.Data.Repositories
                 {
                     Id = reader.GetInt32(reader.GetOrdinal("id")),
                     Name = reader.GetString(reader.GetOrdinal("name")),
-                    Description = reader.GetString(reader.GetOrdinal("description")),
+                    Description = reader.IsDBNull(reader.GetOrdinal("description"))
+                        ? ""
+                        : reader.GetString(reader.GetOrdinal("description")),
                     Price = reader.GetDecimal(reader.GetOrdinal("price")),
                     Stock = reader.GetInt32(reader.GetOrdinal("stock")),
-                    ImageUrl = reader.GetString(reader.GetOrdinal("imageurl")),
-                    CreatedAt = reader.GetDateTime(reader.GetOrdinal("createdat"))
+                    ImageUrl = reader.GetString(reader.GetOrdinal("image_url")),
+                    CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
                 });
             }
 
@@ -51,7 +62,10 @@ namespace Marketplace.Data.Repositories
             connection.Open();
 
             using var command = new NpgsqlCommand(
-                "SELECT * FROM products WHERE id = @id",
+                @"SELECT 
+                    id, name, description, price, stock, image_url, created_at
+                  FROM products 
+                  WHERE id = @id",
                 connection
             );
 
@@ -65,11 +79,13 @@ namespace Marketplace.Data.Repositories
             {
                 Id = reader.GetInt32(reader.GetOrdinal("id")),
                 Name = reader.GetString(reader.GetOrdinal("name")),
-                Description = reader.GetString(reader.GetOrdinal("description")),
+                Description = reader.IsDBNull(reader.GetOrdinal("description"))
+                    ? ""
+                    : reader.GetString(reader.GetOrdinal("description")),
                 Price = reader.GetDecimal(reader.GetOrdinal("price")),
                 Stock = reader.GetInt32(reader.GetOrdinal("stock")),
-                ImageUrl = reader.GetString(reader.GetOrdinal("imageurl")),
-                CreatedAt = reader.GetDateTime(reader.GetOrdinal("createdat"))
+                ImageUrl = reader.GetString(reader.GetOrdinal("image_url")),
+                CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
             };
         }
 
@@ -80,17 +96,18 @@ namespace Marketplace.Data.Repositories
 
             using var command = new NpgsqlCommand(
                 @"INSERT INTO products 
-                  (name, description, price, stock, imageurl, createdat)
-                  VALUES (@name, @description, @price, @stock, @imageurl, @createdat)",
+                  (name, description, price, stock, image_url, created_at)
+                  VALUES 
+                  (@name, @description, @price, @stock, @image_url, @created_at)",
                 connection
             );
 
             command.Parameters.AddWithValue("name", product.Name);
-            command.Parameters.AddWithValue("description", product.Description);
+            command.Parameters.AddWithValue("description", product.Description ?? "");
             command.Parameters.AddWithValue("price", product.Price);
             command.Parameters.AddWithValue("stock", product.Stock);
-            command.Parameters.AddWithValue("imageurl", product.ImageUrl);
-            command.Parameters.AddWithValue("createdat", product.CreatedAt);
+            command.Parameters.AddWithValue("image_url", product.ImageUrl);
+            command.Parameters.AddWithValue("created_at", product.CreatedAt);
 
             command.ExecuteNonQuery();
         }
@@ -106,17 +123,17 @@ namespace Marketplace.Data.Repositories
                     description = @description,
                     price = @price,
                     stock = @stock,
-                    imageurl = @imageurl
+                    image_url = @image_url
                   WHERE id = @id",
                 connection
             );
 
             command.Parameters.AddWithValue("id", product.Id);
             command.Parameters.AddWithValue("name", product.Name);
-            command.Parameters.AddWithValue("description", product.Description);
+            command.Parameters.AddWithValue("description", product.Description ?? "");
             command.Parameters.AddWithValue("price", product.Price);
             command.Parameters.AddWithValue("stock", product.Stock);
-            command.Parameters.AddWithValue("imageurl", product.ImageUrl);
+            command.Parameters.AddWithValue("image_url", product.ImageUrl);
 
             command.ExecuteNonQuery();
         }
