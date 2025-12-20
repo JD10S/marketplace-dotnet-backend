@@ -21,14 +21,29 @@ namespace Marketplace.Data.Repositories
             using var connection = _db.GetConnection();
             connection.Open();
 
+          
+            int? cartId = null;
+
+            using (var cartCmd = new NpgsqlCommand(
+                "SELECT id FROM carts WHERE user_id = @user_id",
+                connection))
+            {
+                cartCmd.Parameters.AddWithValue("@user_id", userId);
+                cartId = cartCmd.ExecuteScalar() as int?;
+            }
+
+            if (cartId is null)
+                return items; 
+
+            
             using var command = new NpgsqlCommand(
-                @"SELECT id, cart_id, product_id, quantity, unit_price
-                  FROM cart_items
-                  WHERE cart_id = @cart_id",
+                @"SELECT id, product_id, quantity, unit_price
+          FROM cart_items
+          WHERE cart_id = @cart_id",
                 connection
             );
 
-            command.Parameters.AddWithValue("cart_id", userId);
+            command.Parameters.AddWithValue("@cart_id", cartId.Value);
 
             using var reader = command.ExecuteReader();
 
@@ -37,30 +52,29 @@ namespace Marketplace.Data.Repositories
                 items.Add(new CartItem
                 {
                     Id = reader.GetInt32(0),
-                    CartId = reader.GetInt32(1),
-                    ProductId = reader.GetInt32(2),
-                    Quantity = reader.GetInt32(3),
-                    UnitPrice = reader.GetDecimal(4)
+                    ProductId = reader.GetInt32(1),
+                    Quantity = reader.GetInt32(2),
+                    UnitPrice = reader.GetDecimal(3)
                 });
             }
 
             return items;
         }
 
-        public void Add(CartItem item)
+        public void Add(int cartId, CartItem item)
         {
             using var connection = _db.GetConnection();
             connection.Open();
 
             using var checkCmd = new NpgsqlCommand(
                 @"SELECT id, quantity
-                  FROM cart_items
-                  WHERE cart_id = @cart_id AND product_id = @product_id",
+          FROM cart_items
+          WHERE cart_id = @cart_id AND product_id = @product_id",
                 connection
             );
 
-            checkCmd.Parameters.AddWithValue("cart_id", item.CartId);
-            checkCmd.Parameters.AddWithValue("product_id", item.ProductId);
+            checkCmd.Parameters.AddWithValue("@cart_id", cartId);
+            checkCmd.Parameters.AddWithValue("@product_id", item.ProductId);
 
             using var reader = checkCmd.ExecuteReader();
 
@@ -72,13 +86,13 @@ namespace Marketplace.Data.Repositories
 
                 using var updateCmd = new NpgsqlCommand(
                     @"UPDATE cart_items
-                      SET quantity = @quantity
-                      WHERE id = @id",
+              SET quantity = @quantity
+              WHERE id = @id",
                     connection
                 );
 
-                updateCmd.Parameters.AddWithValue("quantity", qty + item.Quantity);
-                updateCmd.Parameters.AddWithValue("id", id);
+                updateCmd.Parameters.AddWithValue("@quantity", qty + item.Quantity);
+                updateCmd.Parameters.AddWithValue("@id", id);
 
                 updateCmd.ExecuteNonQuery();
             }
@@ -88,15 +102,15 @@ namespace Marketplace.Data.Repositories
 
                 using var insertCmd = new NpgsqlCommand(
                     @"INSERT INTO cart_items 
-                      (cart_id, product_id, quantity, unit_price)
-                      VALUES (@cart_id, @product_id, @quantity, @unit_price)",
+              (cart_id, product_id, quantity, unit_price)
+              VALUES (@cart_id, @product_id, @quantity, @unit_price)",
                     connection
                 );
 
-                insertCmd.Parameters.AddWithValue("cart_id", item.CartId);
-                insertCmd.Parameters.AddWithValue("product_id", item.ProductId);
-                insertCmd.Parameters.AddWithValue("quantity", item.Quantity);
-                insertCmd.Parameters.AddWithValue("unit_price", item.UnitPrice);
+                insertCmd.Parameters.AddWithValue("@cart_id", cartId);
+                insertCmd.Parameters.AddWithValue("@product_id", item.ProductId);
+                insertCmd.Parameters.AddWithValue("@quantity", item.Quantity);
+                insertCmd.Parameters.AddWithValue("@unit_price", item.UnitPrice!.Value);
 
                 insertCmd.ExecuteNonQuery();
             }
@@ -160,21 +174,21 @@ namespace Marketplace.Data.Repositories
             using var connection = _db.GetConnection();
             connection.Open();
 
-            using var cmd = new NpgsqlCommand(
-                "SELECT * FROM carts WHERE user_id = @userId",
+            using var command = new NpgsqlCommand(
+                "SELECT id, user_id FROM carts WHERE user_id = @userId",
                 connection
             );
 
-            cmd.Parameters.AddWithValue("@userId", userId);
+            command.Parameters.AddWithValue("userId", userId);
 
-            using var reader = cmd.ExecuteReader();
+            using var reader = command.ExecuteReader();
 
             if (!reader.Read()) return null;
 
             return new Cart
             {
-                Id = reader.GetInt32(reader.GetOrdinal("id")),
-                UserId = reader.GetInt32(reader.GetOrdinal("user_id"))
+                Id = reader.GetInt32(0),
+                UserId = reader.GetInt32(1)
             };
         }
 
@@ -183,13 +197,13 @@ namespace Marketplace.Data.Repositories
             using var connection = _db.GetConnection();
             connection.Open();
 
-            using var cmd = new NpgsqlCommand(
-                "INSERT INTO carts (user_id, created_at) VALUES (@userId, NOW())",
+            using var command = new NpgsqlCommand(
+                "INSERT INTO carts (user_id) VALUES (@userId)",
                 connection
             );
 
-            cmd.Parameters.AddWithValue("@userId", userId);
-            cmd.ExecuteNonQuery();
+            command.Parameters.AddWithValue("userId", userId);
+            command.ExecuteNonQuery();
         }
     }
 }

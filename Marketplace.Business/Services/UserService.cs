@@ -8,10 +8,12 @@ namespace Marketplace.Business.Services
     public class UserService : IUserService
     {
         private readonly IUserRepository _userRepository;
+        private readonly ICartRepository _cartRepository;
 
-        public UserService(IUserRepository userRepository)
+        public UserService(IUserRepository userRepository, ICartRepository cartRepository)
         {
             _userRepository = userRepository;
+            _cartRepository = cartRepository;
         }
 
         public void Register(User user)

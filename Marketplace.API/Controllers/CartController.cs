@@ -13,36 +13,23 @@ public class CartController : ControllerBase
         _cartService = cartService;
     }
 
-    
     [HttpGet("{userId:int}")]
     public IActionResult GetCart(int userId)
     {
-        try
-        {
-            var cartItems = _cartService.GetCart(userId);
-
-         
-            return Ok(cartItems ?? new List<CartItem>());
-        }
-        catch 
-        {
-
-            return Ok(new List<CartItem>());
-        }
+        var cartItems = _cartService.GetCart(userId);
+        return Ok(cartItems);
     }
 
-   
-    [HttpPost]
-    public IActionResult Add([FromBody] CartItem item)
+    [HttpPost("{userId:int}")]
+    public IActionResult Add(int userId, [FromBody] CartItem item)
     {
-        if (item == null || item.ProductId <= 0 || item.Quantity <= 0)
-            return BadRequest("Datos del ítem inválidos");
+        if (item == null)
+            return BadRequest("Item inválido");
 
-        _cartService.AddToCart(item);
-        return Ok(); 
+        _cartService.AddToCart(userId, item);
+        return Ok();
     }
 
-  
     [HttpPut]
     public IActionResult Update([FromBody] CartItem item)
     {
@@ -53,7 +40,6 @@ public class CartController : ControllerBase
         return Ok();
     }
 
-    
     [HttpDelete("{id:int}")]
     public IActionResult Remove(int id)
     {

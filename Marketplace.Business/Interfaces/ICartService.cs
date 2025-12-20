@@ -10,10 +10,11 @@ namespace Marketplace.Business.Interfaces
     public interface ICartService
     {
         IEnumerable<CartItem> GetCart(int userId);
-        void AddToCart(CartItem item);
+        void AddToCart(int userId, CartItem item);   
         void UpdateQuantity(int id, int quantity);
         void Remove(int id);
-        void Update(CartItem item);
         decimal GetTotal(int userId);
+        void Update(CartItem item);
+        
     }
 }
