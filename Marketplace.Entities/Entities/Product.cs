@@ -15,7 +15,7 @@ namespace Marketplace.Entities.Entities
         public decimal Price { get; set; } 
         public int Stock { get; set; } 
         [Column("imageurl")]
-        public string ImageUrl { get; set; } = string.Empty;
+        public string? ImageUrl { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; } 
 
     }
