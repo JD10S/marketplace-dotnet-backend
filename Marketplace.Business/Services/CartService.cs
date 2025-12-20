@@ -42,7 +42,7 @@ namespace Marketplace.Business.Services
         public decimal GetTotal(int userId)
         {
             var items = _cartRepository.GetByUser(userId);
-            return items.Sum(i => i.UnitPrice * i.Quantity);
+            return items.Sum(i => (i.UnitPrice ?? 0m) * i.Quantity);
         }
 
         public void Update(CartItem item)
