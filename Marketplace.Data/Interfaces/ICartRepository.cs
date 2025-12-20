@@ -9,6 +9,8 @@ namespace Marketplace.Data.Interfaces
 {
     public interface ICartRepository
     {
+        Cart? GetCartByUser(int userId);
+        void CreateCart(int userId);
         IEnumerable<CartItem> GetByUser(int userId);
         void Add(CartItem item);
         void UpdateQuantity(int id, int quantity);
