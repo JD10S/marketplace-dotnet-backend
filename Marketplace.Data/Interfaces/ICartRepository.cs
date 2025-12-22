@@ -11,10 +11,10 @@ namespace Marketplace.Data.Interfaces
     {
         Cart? GetCartByUser(int userId);
         void CreateCart(int userId);
-        IEnumerable<CartItem> GetByUser(int userId);
         void Add(int cartId, CartItem item);
+        IEnumerable<CartItem> GetByUser(int userId);
+        void Update(CartItem item);
         void UpdateQuantity(int id, int quantity);
         void Remove(int id);
-        void Update(CartItem item);
     }
 }
