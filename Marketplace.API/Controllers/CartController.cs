@@ -16,17 +16,24 @@ public class CartController : ControllerBase
     [HttpGet("{userId:int}")]
     public IActionResult GetCart(int userId)
     {
-        var cartItems = _cartService.GetCart(userId);
-        return Ok(cartItems);
+        try
+        {
+            var cartItems = _cartService.GetCart(userId);
+            return Ok(cartItems ?? new List<CartItem>());
+        }
+        catch
+        {
+            return Ok(new List<CartItem>());
+        }
     }
 
     [HttpPost("{userId:int}")]
     public IActionResult Add(int userId, [FromBody] CartItem item)
     {
-        if (item == null)
-            return BadRequest("Item inválido");
+        if (item == null || item.ProductId <= 0 || item.Quantity <= 0)
+            return BadRequest("Datos del ítem inválidos");
 
-        _cartService.AddToCart(userId, item);
+        _cartService.AddToCart(userId, item); 
         return Ok();
     }
 
