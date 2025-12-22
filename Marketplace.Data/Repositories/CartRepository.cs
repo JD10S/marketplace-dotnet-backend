@@ -210,5 +210,34 @@ namespace Marketplace.Data.Repositories
             command.Parameters.AddWithValue("user_id", userId);
             command.ExecuteNonQuery();
         }
+
+
+        public int GetOrCreateCartId(int userId)
+        {
+            using var connection = _db.GetConnection();
+            connection.Open();
+
+            using var selectCmd = new NpgsqlCommand(
+                "SELECT id FROM carts WHERE user_id = @userId",
+                connection
+            );
+            selectCmd.Parameters.AddWithValue("userId", userId);
+
+            var cartId = selectCmd.ExecuteScalar() as int?;
+
+            if (cartId != null)
+                return cartId.Value;
+
+            using var insertCmd = new NpgsqlCommand(
+                @"INSERT INTO carts (user_id, created_at)
+          VALUES (@userId, NOW())
+          RETURNING id",
+                connection
+            );
+
+            insertCmd.Parameters.AddWithValue("userId", userId);
+
+            return (int)insertCmd.ExecuteScalar()!;
+        }
     }
 }
