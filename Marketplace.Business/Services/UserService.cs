@@ -43,7 +43,7 @@ namespace Marketplace.Business.Services
 
             Console.WriteLine($"PASSWORD RECIBIDO: '{password}'");
 
-            if (user.Password != password)
+            if (user.Password    != password)
                 throw new Exception("Invalid credentials");
 
             return user;

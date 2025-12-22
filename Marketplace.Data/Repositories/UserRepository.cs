@@ -1,7 +1,8 @@
-﻿using Npgsql;
-using Marketplace.Data.Database;
+﻿using Marketplace.Data.Database;
 using Marketplace.Data.Interfaces;
 using Marketplace.Entities.Entities;
+using Npgsql;
+using System.Data;
 
 namespace Marketplace.Data.Repositories
 {
@@ -23,7 +24,6 @@ namespace Marketplace.Data.Repositories
             );
 
             command.Parameters.AddWithValue("@email", email);
-
             connection.Open();
             using var reader = command.ExecuteReader();
 
@@ -31,11 +31,11 @@ namespace Marketplace.Data.Repositories
 
             return new User
             {
-                Id = reader.GetInt32(reader.GetOrdinal("id")),
-                Name = reader.GetString(reader.GetOrdinal("full_name")),
-                Email = reader.GetString(reader.GetOrdinal("email")),
-                Password = reader.GetString(reader.GetOrdinal("password_hash")),
-                CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
+                Id = reader.GetInt32("id"),
+                Name = reader.GetString("full_name"),        
+                Email = reader.GetString("email"),
+                Password = reader.GetString("password_hash"), 
+                CreatedAt = reader.GetDateTime("created_at")
             };
         }
 
@@ -45,7 +45,7 @@ namespace Marketplace.Data.Repositories
             connection.Open();
 
             using var cmd = new NpgsqlCommand(
-                @"INSERT INTO users (name, email, password)
+                @"INSERT INTO users (full_name, email, password_hash)
           VALUES (@name, @email, @password)
           RETURNING id",
                 connection
@@ -53,7 +53,7 @@ namespace Marketplace.Data.Repositories
 
             cmd.Parameters.AddWithValue("name", user.Name);
             cmd.Parameters.AddWithValue("email", user.Email);
-            cmd.Parameters.AddWithValue("password", user.Password);
+            cmd.Parameters.AddWithValue("password", user.Password);  
 
             return (int)cmd.ExecuteScalar()!;
         }
