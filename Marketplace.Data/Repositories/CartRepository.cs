@@ -204,27 +204,42 @@ namespace Marketplace.Data.Repositories
             using var connection = _db.GetConnection();
             connection.Open();
 
-            using var selectCmd = new NpgsqlCommand("SELECT id FROM carts WHERE user_id = @userId", connection);
-            selectCmd.Parameters.AddWithValue("userId", userId);
-            var existingId = selectCmd.ExecuteScalar();
+            using var transaction = connection.BeginTransaction();
 
-            if (existingId != null)
-                return (int)existingId;
+            try
+            {
+                using var selectCmd = new NpgsqlCommand("SELECT id FROM carts WHERE user_id = @userId FOR UPDATE", connection, transaction);
+                selectCmd.Parameters.AddWithValue("userId", userId);
+                var existingId = selectCmd.ExecuteScalar();
 
-            using var insertCmd = new NpgsqlCommand(
-                @"INSERT INTO carts (user_id, created_at) 
-          VALUES (@userId, NOW()) 
-          RETURNING id",
-                connection
-            );
-            insertCmd.Parameters.AddWithValue("userId", userId);
+                if (existingId != null)
+                {
+                    transaction.Commit();
+                    return (int)existingId;
+                }
 
-            var newId = insertCmd.ExecuteScalar();
+                using var insertCmd = new NpgsqlCommand(
+                    @"INSERT INTO carts (user_id, created_at) 
+              VALUES (@userId, NOW()) 
+              RETURNING id",
+                    connection, transaction
+                );
+                insertCmd.Parameters.AddWithValue("userId", userId);
 
-            if (newId == null)
-                throw new Exception("No se pudo crear el carrito para el usuario " + userId);
+                var newId = insertCmd.ExecuteScalar();
 
-            return (int)newId;
+                transaction.Commit();
+
+                if (newId == null)
+                    throw new Exception("No se pudo crear el carrito");
+
+                return (int)newId;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
         }
     }
 }
