@@ -32,7 +32,7 @@ namespace Marketplace.Data.Repositories
             return new User
             {
                 Id = reader.GetInt32(reader.GetOrdinal("id")),
-                FullName = reader.GetString(reader.GetOrdinal("full_name")),
+                Name = reader.GetString(reader.GetOrdinal("full_name")),
                 Email = reader.GetString(reader.GetOrdinal("email")),
                 Password = reader.GetString(reader.GetOrdinal("password_hash")),
                 CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
@@ -51,7 +51,7 @@ namespace Marketplace.Data.Repositories
                 connection
             );
 
-            cmd.Parameters.AddWithValue("name", user.FullName);
+            cmd.Parameters.AddWithValue("name", user.Name);
             cmd.Parameters.AddWithValue("email", user.Email);
             cmd.Parameters.AddWithValue("password", user.Password);
 

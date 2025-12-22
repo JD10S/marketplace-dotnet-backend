@@ -23,14 +23,9 @@ namespace Marketplace.Business.Services
             if (item.Quantity <= 0)
                 throw new Exception("Quantity must be greater than zero");
 
-            var cart = _cartRepository.GetCartByUser(userId);
+            var cartId = _cartRepository.GetOrCreateCartId(userId);
 
-            if (cart == null)
-            {
-            throw new Exception("Cart not found ");
-            }
-
-            _cartRepository.Add(cart.Id, item);
+            _cartRepository.Add(cartId, item);
         }
 
         public void UpdateQuantity(int id, int quantity)
