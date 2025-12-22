@@ -30,13 +30,9 @@ namespace Marketplace.Business.Services
 
             user.CreatedAt = DateTime.UtcNow;
 
-            _userRepository.Create(user);
+            var userId = _userRepository.Create(user);
 
-            var createdUser = _userRepository.GetByEmail(user.Email);
-            if (createdUser == null)
-                throw new Exception("Error creating user");
-
-            _cartRepository.CreateCart(createdUser.Id);
+            _cartRepository.CreateCart(userId);
         }
 
         public User Login(string email, string password)

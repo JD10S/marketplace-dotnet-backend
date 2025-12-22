@@ -10,6 +10,6 @@ namespace Marketplace.Data.Interfaces
     public interface IUserRepository
     {
         User? GetByEmail(string email);
-        void Create(User user);
+        int Create(User user);
     }
 }

@@ -30,8 +30,8 @@ public class CartController : ControllerBase
     [HttpPost("{userId:int}")]
     public IActionResult Add(int userId, [FromBody] CartItem item)
     {
-        if (item == null || item.ProductId <= 0 || item.Quantity <= 0)
-            return BadRequest("Datos del ítem inválidos");
+        //if (item == null || item.ProductId <= 0 || item.Quantity <= 0)
+        //    return BadRequest("Datos del ítem inválidos");
 
         _cartService.AddToCart(userId, item); 
         return Ok();

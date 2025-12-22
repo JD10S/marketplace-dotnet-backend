@@ -39,22 +39,23 @@ namespace Marketplace.Data.Repositories
             };
         }
 
-        public void Create(User user)
+        public int Create(User user)
         {
             using var connection = _db.GetConnection();
             connection.Open();
 
-            using var command = new NpgsqlCommand(@"
-                INSERT INTO users (full_name, email, password_hash, created_at)
-                VALUES (@full_name, @email, @password_hash, @created_at)
-            ", connection);
+            using var cmd = new NpgsqlCommand(
+                @"INSERT INTO users (name, email, password)
+          VALUES (@name, @email, @password)
+          RETURNING id",
+                connection
+            );
 
-            command.Parameters.AddWithValue("@full_name", user.FullName);
-            command.Parameters.AddWithValue("@email", user.Email);
-            command.Parameters.AddWithValue("@password_hash", user.Password);
-            command.Parameters.AddWithValue("@created_at", user.CreatedAt);
+            cmd.Parameters.AddWithValue("name", user.FullName);
+            cmd.Parameters.AddWithValue("email", user.Email);
+            cmd.Parameters.AddWithValue("password", user.Password);
 
-            command.ExecuteNonQuery();
+            return (int)cmd.ExecuteScalar()!;
         }
     }
 }
