@@ -57,5 +57,44 @@ namespace Marketplace.Data.Repositories
 
             return (int)cmd.ExecuteScalar()!;
         }
+
+        public int CreateUserWithCart(User user)
+        {
+            using var connection = _db.GetConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                int userId;
+                using (var userCmd = new NpgsqlCommand(
+                    @"INSERT INTO users (full_name, email, password_hash, created_at)
+              VALUES (@full_name, @email, @password_hash, NOW())
+              RETURNING id", connection, transaction))
+                {
+                    userCmd.Parameters.AddWithValue("full_name", user.Name);
+                    userCmd.Parameters.AddWithValue("email", user.Email);
+                    userCmd.Parameters.AddWithValue("password_hash", user.Password);
+                    userId = (int)userCmd.ExecuteScalar()!;
+                }
+
+                using (var cartCmd = new NpgsqlCommand(
+                    @"INSERT INTO carts (user_id, created_at)
+              VALUES (@userId, NOW())
+              RETURNING id", connection, transaction))
+                {
+                    cartCmd.Parameters.AddWithValue("userId", userId);
+                    cartCmd.ExecuteScalar(); 
+                }
+
+                transaction.Commit();
+                return userId;
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
     }
 }

@@ -196,6 +196,21 @@ namespace Marketplace.Data.Repositories
             };
         }
 
+        public int GetCartIdByUser(int userId)
+        {
+            using var connection = _db.GetConnection();
+            connection.Open();
+
+            using var cmd = new NpgsqlCommand("SELECT id FROM carts WHERE user_id = @userId", connection);
+            cmd.Parameters.AddWithValue("userId", userId);
+
+            var result = cmd.ExecuteScalar();
+            if (result == null)
+                throw new Exception("Carrito no encontrado para el usuario");
+
+            return (int)result;
+        }
+
         public void AddItemToUserCart(int userId, CartItem item)
         {
             using var connection = _db.GetConnection();
@@ -272,47 +287,6 @@ namespace Marketplace.Data.Repositories
         }
 
 
-        public int GetOrCreateCartId(int userId)
-        {
-            using var connection = _db.GetConnection();
-            connection.Open();
-
-            using var transaction = connection.BeginTransaction();
-
-            try
-            {
-                using var selectCmd = new NpgsqlCommand("SELECT id FROM carts WHERE user_id = @userId FOR UPDATE", connection, transaction);
-                selectCmd.Parameters.AddWithValue("userId", userId);
-                var existingId = selectCmd.ExecuteScalar();
-
-                if (existingId != null)
-                {
-                    transaction.Commit();
-                    return (int)existingId;
-                }
-
-                using var insertCmd = new NpgsqlCommand(
-                    @"INSERT INTO carts (user_id, created_at) 
-              VALUES (@userId, NOW()) 
-              RETURNING id",
-                    connection, transaction
-                );
-                insertCmd.Parameters.AddWithValue("userId", userId);
-
-                var newId = insertCmd.ExecuteScalar();
-
-                transaction.Commit();
-
-                if (newId == null)
-                    throw new Exception("No se pudo crear el carrito");
-
-                return (int)newId;
-            }
-            catch
-            {
-                transaction.Rollback();
-                throw;
-            }
-        }
+       
     }
 }

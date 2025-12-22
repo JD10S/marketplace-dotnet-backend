@@ -11,5 +11,7 @@ namespace Marketplace.Data.Interfaces
     {
         User? GetByEmail(string email);
         int Create(User user);
+
+        int CreateUserWithCart(User user);
     }
 }

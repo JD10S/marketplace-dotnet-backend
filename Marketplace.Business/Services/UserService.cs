@@ -30,9 +30,7 @@ namespace Marketplace.Business.Services
 
             user.CreatedAt = DateTime.UtcNow;
 
-            var userId = _userRepository.Create(user);
-
-            //_cartRepository.GetOrCreateCartId(userId);
+            var userId = _userRepository.CreateUserWithCart(user);
             Console.WriteLine($"[CARRITO CREADO] Usuario registrado con ID: {userId}. Carrito inicializado.");
         }
 
@@ -52,8 +50,7 @@ namespace Marketplace.Business.Services
 
         public void AddToCart(int userId, CartItem item)
         {
-            var cartId = _cartRepository.GetOrCreateCartId(userId);
-            _cartRepository.Add(cartId, item);
+            _cartRepository.AddItemToUserCart(userId, item);
         }
 
         private string HashPassword(string password)

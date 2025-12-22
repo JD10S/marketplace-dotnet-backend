@@ -17,6 +17,8 @@ namespace Marketplace.Data.Interfaces
         void UpdateQuantity(int id, int quantity);
         
         void AddItemToUserCart(int userId, CartItem item);
-        int GetOrCreateCartId(int userId);
+        int GetCartIdByUser(int userId);
+
+
     }
 }
