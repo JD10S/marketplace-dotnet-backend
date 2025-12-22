@@ -196,7 +196,80 @@ namespace Marketplace.Data.Repositories
             };
         }
 
-     
+        public void AddItemToUserCart(int userId, CartItem item)
+        {
+            using var connection = _db.GetConnection();
+            connection.Open();
+            using var transaction = connection.BeginTransaction();
+
+            try
+            {
+                
+                int cartId;
+                using (var selectCmd = new NpgsqlCommand("SELECT id FROM carts WHERE user_id = @userId FOR UPDATE", connection, transaction))
+                {
+                    selectCmd.Parameters.AddWithValue("userId", userId);
+                    var result = selectCmd.ExecuteScalar();
+                    if (result != null)
+                    {
+                        cartId = (int)result;
+                    }
+                    else
+                    {
+                        using var insertCmd = new NpgsqlCommand(
+                            @"INSERT INTO carts (user_id, created_at) 
+                      VALUES (@userId, NOW()) 
+                      RETURNING id", connection, transaction);
+                        insertCmd.Parameters.AddWithValue("userId", userId);
+                        cartId = (int)insertCmd.ExecuteScalar()!;
+                    }
+                }
+
+                
+                using var checkCmd = new NpgsqlCommand(
+                    @"SELECT id, quantity FROM cart_items 
+              WHERE cart_id = @cartId AND product_id = @productId", connection, transaction);
+                checkCmd.Parameters.AddWithValue("cartId", cartId);
+                checkCmd.Parameters.AddWithValue("productId", item.ProductId);
+
+                using var reader = checkCmd.ExecuteReader();
+                if (reader.Read())
+                {
+                    int itemId = reader.GetInt32(0);
+                    int currentQty = reader.GetInt32(1);
+                    reader.Close();
+
+                    using var updateCmd = new NpgsqlCommand(
+                        "UPDATE cart_items SET quantity = @quantity WHERE id = @id", connection, transaction);
+                    updateCmd.Parameters.AddWithValue("quantity", currentQty + item.Quantity);
+                    updateCmd.Parameters.AddWithValue("id", itemId);
+                    updateCmd.ExecuteNonQuery();
+                }
+                else
+                {
+                    reader.Close();
+
+                    if (item.UnitPrice == null)
+                        throw new Exception("UnitPrice is required");
+
+                    using var insertItemCmd = new NpgsqlCommand(
+                        @"INSERT INTO cart_items (cart_id, product_id, quantity, unit_price)
+                  VALUES (@cartId, @productId, @quantity, @unitPrice)", connection, transaction);
+                    insertItemCmd.Parameters.AddWithValue("cartId", cartId);
+                    insertItemCmd.Parameters.AddWithValue("productId", item.ProductId);
+                    insertItemCmd.Parameters.AddWithValue("quantity", item.Quantity);
+                    insertItemCmd.Parameters.AddWithValue("unitPrice", item.UnitPrice.Value);
+                    insertItemCmd.ExecuteNonQuery();
+                }
+
+                transaction.Commit();
+            }
+            catch
+            {
+                transaction.Rollback();
+                throw;
+            }
+        }
 
 
         public int GetOrCreateCartId(int userId)

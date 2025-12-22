@@ -32,7 +32,7 @@ namespace Marketplace.Business.Services
 
             var userId = _userRepository.Create(user);
 
-            _cartRepository.GetOrCreateCartId(userId);
+            //_cartRepository.GetOrCreateCartId(userId);
             Console.WriteLine($"[CARRITO CREADO] Usuario registrado con ID: {userId}. Carrito inicializado.");
         }
 
