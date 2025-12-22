@@ -19,7 +19,7 @@ namespace Marketplace.Data.Repositories
         {
             using var connection = _db.GetConnection();
             using var command = new NpgsqlCommand(
-                "SELECT * FROM users WHERE email = @email",
+                "SELECT id, full_name, email, password_hash, created_at FROM users WHERE email = @email",
                 connection
             );
 
@@ -46,14 +46,14 @@ namespace Marketplace.Data.Repositories
 
             using var cmd = new NpgsqlCommand(
                 @"INSERT INTO users (full_name, email, password_hash)
-          VALUES (@name, @email, @password)
+          VALUES (@full_name, @email, @password_hash)
           RETURNING id",
                 connection
             );
 
-            cmd.Parameters.AddWithValue("name", user.Name);
+            cmd.Parameters.AddWithValue("full_name", user.Name);
             cmd.Parameters.AddWithValue("email", user.Email);
-            cmd.Parameters.AddWithValue("password", user.Password);  
+            cmd.Parameters.AddWithValue("password_hash", user.Password);
 
             return (int)cmd.ExecuteScalar()!;
         }
