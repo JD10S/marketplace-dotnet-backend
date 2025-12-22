@@ -21,13 +21,13 @@ namespace Marketplace.Business.Services
         public void AddToCart(int userId, CartItem item)
         {
             if (item == null)
-                throw new Exception("Cart item is required");
+                throw new ArgumentNullException(nameof(item));
 
             if (item.Quantity <= 0)
-                throw new Exception("Quantity must be greater than zero");
+                throw new ArgumentException("Quantity must be greater than zero");
 
             if (item.ProductId <= 0)
-                throw new Exception("ProductId is required");
+                throw new ArgumentException("ProductId is required");
 
             var cart = _cartRepository.GetCartByUser(userId);
 
@@ -36,9 +36,12 @@ namespace Marketplace.Business.Services
                 _cartRepository.CreateCart(userId);
                 cart = _cartRepository.GetCartByUser(userId);
 
-                if (cart == null)
-                    throw new Exception("Unable to create cart for user");
+                if (cart == null || cart.Id == 0)
+                    throw new InvalidOperationException($"Failed to create or retrieve cart for user {userId}");
             }
+
+            
+            item.CartId = cart.Id;
 
             _cartRepository.Add(cart.Id, item);
         }
