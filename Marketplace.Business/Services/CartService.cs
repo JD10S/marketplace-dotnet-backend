@@ -27,8 +27,7 @@ namespace Marketplace.Business.Services
 
             if (cart == null)
             {
-                _cartRepository.CreateCart(userId);
-                cart = _cartRepository.GetCartByUser(userId)!;
+            throw new Exception("Cart not found ");
             }
 
             _cartRepository.Add(cart.Id, item);
