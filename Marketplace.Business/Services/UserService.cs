@@ -33,7 +33,7 @@ namespace Marketplace.Business.Services
             var userId = _userRepository.Create(user);
 
             _cartRepository.GetOrCreateCartId(userId);
-            Console.WriteLine($"[DEBUG 2025] Carrito creado para nuevo usuario ID: {userId}");
+            Console.WriteLine($"[CARRITO CREADO] Usuario registrado con ID: {userId}. Carrito inicializado.");
         }
 
         public User Login(string email, string password)
@@ -42,7 +42,7 @@ namespace Marketplace.Business.Services
             if (user == null)
                 throw new Exception("Invalid credentials");
 
-            Console.WriteLine($"PASSWORD RECIBIDO: '{password}'");
+           
 
             if (user.Password    != password)
                 throw new Exception("Invalid credentials");
