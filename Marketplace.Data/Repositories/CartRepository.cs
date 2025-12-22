@@ -196,20 +196,7 @@ namespace Marketplace.Data.Repositories
             };
         }
 
-        //public void CreateCart(int userId)
-        //{
-        //    using var connection = _db.GetConnection();
-        //    connection.Open();
-
-        //    using var command = new NpgsqlCommand(
-        //        @"INSERT INTO carts (user_id, created_at)
-        //  VALUES (@user_id, NOW())",
-        //        connection
-        //    );
-
-        //    command.Parameters.AddWithValue("user_id", userId);
-        //    command.ExecuteNonQuery();
-        //}
+     
 
 
         public int GetOrCreateCartId(int userId)
@@ -217,27 +204,38 @@ namespace Marketplace.Data.Repositories
             using var connection = _db.GetConnection();
             connection.Open();
 
+            try
+            {
+                using var insertCmd = new NpgsqlCommand(
+                    @"INSERT INTO carts (user_id, created_at)
+              VALUES (@userId, NOW())
+              ON CONFLICT (user_id) DO NOTHING
+              RETURNING id",
+                    connection
+                );
+
+                insertCmd.Parameters.AddWithValue("userId", userId);
+
+                var result = insertCmd.ExecuteScalar();
+                if (result != null)
+                    return (int)result;
+            }
+            catch (PostgresException ex) when (ex.SqlState == "23505") 
+            {
+            }
+
             using var selectCmd = new NpgsqlCommand(
                 "SELECT id FROM carts WHERE user_id = @userId",
                 connection
             );
             selectCmd.Parameters.AddWithValue("userId", userId);
 
-            var cartId = selectCmd.ExecuteScalar() as int?;
+            var cartId = selectCmd.ExecuteScalar();
 
-            if (cartId != null)
-                return cartId.Value;
+            if (cartId == null)
+                throw new Exception("No se pudo crear ni encontrar el carrito para el usuario");
 
-            using var insertCmd = new NpgsqlCommand(
-                @"INSERT INTO carts (user_id, created_at)
-          VALUES (@userId, NOW())
-          RETURNING id",
-                connection
-            );
-
-            insertCmd.Parameters.AddWithValue("userId", userId);
-
-            return (int)insertCmd.ExecuteScalar()!;
+            return (int)cartId;
         }
     }
 }
