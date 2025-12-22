@@ -204,38 +204,27 @@ namespace Marketplace.Data.Repositories
             using var connection = _db.GetConnection();
             connection.Open();
 
-            try
-            {
-                using var insertCmd = new NpgsqlCommand(
-                    @"INSERT INTO carts (user_id, created_at)
-              VALUES (@userId, NOW())
-              ON CONFLICT (user_id) DO NOTHING
-              RETURNING id",
-                    connection
-                );
+            using var selectCmd = new NpgsqlCommand("SELECT id FROM carts WHERE user_id = @userId", connection);
+            selectCmd.Parameters.AddWithValue("userId", userId);
+            var existingId = selectCmd.ExecuteScalar();
 
-                insertCmd.Parameters.AddWithValue("userId", userId);
+            if (existingId != null)
+                return (int)existingId;
 
-                var result = insertCmd.ExecuteScalar();
-                if (result != null)
-                    return (int)result;
-            }
-            catch (PostgresException ex) when (ex.SqlState == "23505") 
-            {
-            }
-
-            using var selectCmd = new NpgsqlCommand(
-                "SELECT id FROM carts WHERE user_id = @userId",
+            using var insertCmd = new NpgsqlCommand(
+                @"INSERT INTO carts (user_id, created_at) 
+          VALUES (@userId, NOW()) 
+          RETURNING id",
                 connection
             );
-            selectCmd.Parameters.AddWithValue("userId", userId);
+            insertCmd.Parameters.AddWithValue("userId", userId);
 
-            var cartId = selectCmd.ExecuteScalar();
+            var newId = insertCmd.ExecuteScalar();
 
-            if (cartId == null)
-                throw new Exception("No se pudo crear ni encontrar el carrito para el usuario");
+            if (newId == null)
+                throw new Exception("No se pudo crear el carrito para el usuario " + userId);
 
-            return (int)cartId;
+            return (int)newId;
         }
     }
 }
