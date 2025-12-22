@@ -196,20 +196,20 @@ namespace Marketplace.Data.Repositories
             };
         }
 
-        public void CreateCart(int userId)
-        {
-            using var connection = _db.GetConnection();
-            connection.Open();
+        //public void CreateCart(int userId)
+        //{
+        //    using var connection = _db.GetConnection();
+        //    connection.Open();
 
-            using var command = new NpgsqlCommand(
-                @"INSERT INTO carts (user_id, created_at)
-          VALUES (@user_id, NOW())",
-                connection
-            );
+        //    using var command = new NpgsqlCommand(
+        //        @"INSERT INTO carts (user_id, created_at)
+        //  VALUES (@user_id, NOW())",
+        //        connection
+        //    );
 
-            command.Parameters.AddWithValue("user_id", userId);
-            command.ExecuteNonQuery();
-        }
+        //    command.Parameters.AddWithValue("user_id", userId);
+        //    command.ExecuteNonQuery();
+        //}
 
 
         public int GetOrCreateCartId(int userId)

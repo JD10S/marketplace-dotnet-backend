@@ -32,7 +32,7 @@ namespace Marketplace.Business.Services
 
             var userId = _userRepository.Create(user);
 
-            _cartRepository.CreateCart(userId);
+            _cartRepository.GetOrCreateCartId(userId);
         }
 
         public User Login(string email, string password)
