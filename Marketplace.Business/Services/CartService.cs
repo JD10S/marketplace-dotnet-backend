@@ -20,8 +20,7 @@ namespace Marketplace.Business.Services
 
         public void AddToCart(int userId, CartItem item)
         {
-            if (item.Quantity <= 0)
-                throw new Exception("Quantity must be greater than zero");
+         
 
             var cartId = _cartRepository.GetOrCreateCartId(userId);
             Console.WriteLine($"CARRITO CREADO/BUSCADO PARA USER {userId}: cartId = {cartId}");
