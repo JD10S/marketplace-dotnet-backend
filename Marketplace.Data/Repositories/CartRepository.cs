@@ -206,15 +206,30 @@ namespace Marketplace.Data.Repositories
             cmd.Parameters.AddWithValue("userId", userId);
 
             var result = cmd.ExecuteScalar();
-            if (result == null)
-                throw new Exception("Carrito no encontrado para el usuario");
+         
 
-            return (int)result;
+            return result == null ? 0 : (int)result;
         }
 
-        
+        public int CreateCart(int userId)
+        {
+            using var connection = _db.GetConnection();
+            connection.Open();
+
+            using var cmd = new NpgsqlCommand(
+                @"INSERT INTO carts (user_id)
+          VALUES (@user_id)
+          RETURNING id",
+                connection
+            );
+
+            cmd.Parameters.AddWithValue("user_id", userId);
+
+            return (int)cmd.ExecuteScalar();
+        }
 
 
-       
+
+
     }
 }

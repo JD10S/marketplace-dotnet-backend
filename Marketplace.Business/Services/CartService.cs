@@ -21,7 +21,13 @@ namespace Marketplace.Business.Services
         public void AddToCart(int userId, CartItem item)
         {
 
-            int cartId = _cartRepository.GetCartIdByUser(userId);
+            var cartId = _cartRepository.GetCartIdByUser(userId);
+
+            if (cartId == 0)
+            {
+                cartId = _cartRepository.CreateCart(userId);
+            }
+
             _cartRepository.Add(cartId, item);
         }
 
