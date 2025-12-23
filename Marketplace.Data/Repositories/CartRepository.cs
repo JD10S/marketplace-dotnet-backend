@@ -21,7 +21,6 @@ namespace Marketplace.Data.Repositories
             using var connection = _db.GetConnection();
             connection.Open();
 
-          
             int? cartId = null;
 
             using (var cartCmd = new NpgsqlCommand(
@@ -33,13 +32,13 @@ namespace Marketplace.Data.Repositories
             }
 
             if (cartId is null)
-                return items; 
+                return items;
 
-            
             using var command = new NpgsqlCommand(
-                @"SELECT id, product_id, quantity, unit_price
-          FROM cart_items
-          WHERE cart_id = @cart_id",
+                @"SELECT ci.id, ci.product_id, ci.quantity, ci.unit_price, p.name, p.image_url
+          FROM cart_items ci
+          INNER JOIN products p ON ci.product_id = p.id
+          WHERE ci.cart_id = @cart_id",
                 connection
             );
 
@@ -54,7 +53,9 @@ namespace Marketplace.Data.Repositories
                     Id = reader.GetInt32(0),
                     ProductId = reader.GetInt32(1),
                     Quantity = reader.GetInt32(2),
-                    UnitPrice = reader.GetDecimal(3)
+                    UnitPrice = reader.GetDecimal(3),
+                    ProductName = reader.IsDBNull(4) ? null : reader.GetString(4),  
+                    ImageUrl = reader.IsDBNull(5) ? null : reader.GetString(5)      
                 });
             }
 
