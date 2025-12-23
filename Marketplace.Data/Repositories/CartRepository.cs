@@ -199,17 +199,14 @@ namespace Marketplace.Data.Repositories
 
         public int GetCartIdByUser(int userId)
         {
-            using var connection = _db.GetConnection();
-            connection.Open();
+            var cart = GetCartByUser(userId);
 
-            using var cmd = new NpgsqlCommand("SELECT id FROM carts WHERE user_id = @userId", connection);
-            cmd.Parameters.AddWithValue("userId", userId);
+            if (cart == null)
+                return CreateCart(userId);
 
-            var result = cmd.ExecuteScalar();
-         
-
-            return result == null ? 0 : (int)result;
+            return cart.Id;
         }
+
 
         public int CreateCart(int userId)
         {
@@ -217,9 +214,9 @@ namespace Marketplace.Data.Repositories
             connection.Open();
 
             using var cmd = new NpgsqlCommand(
-                @"INSERT INTO carts (user_id)
-          VALUES (@user_id)
-          RETURNING id",
+                @"INSERT INTO carts (user_id, created_at)
+          VALUES (@user_id, NOW())
+          RETURNING id;",
                 connection
             );
 
