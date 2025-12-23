@@ -48,10 +48,7 @@ namespace Marketplace.Business.Services
             return user;
         }
 
-        public void AddToCart(int userId, CartItem item)
-        {
-            _cartRepository.AddItemToUserCart(userId, item);
-        }
+        
 
         private string HashPassword(string password)
         {

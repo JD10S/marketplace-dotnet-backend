@@ -67,6 +67,7 @@ namespace Marketplace.Data.Repositories
             try
             {
                 int userId;
+
                 using (var userCmd = new NpgsqlCommand(
                     @"INSERT INTO users (full_name, email, password_hash, created_at)
               VALUES (@full_name, @email, @password_hash, NOW())

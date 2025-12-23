@@ -15,8 +15,6 @@ namespace Marketplace.Data.Interfaces
         void Remove(int id);
         Cart? GetCartByUser(int userId);
         void UpdateQuantity(int id, int quantity);
-        
-        void AddItemToUserCart(int userId, CartItem item);
         int GetCartIdByUser(int userId);
 
 
